@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Mapping{% endblock %}
+{% block content %}
+
+<div class="card">
+  <h1>1. Pull data from Canvas</h1>
+  <form method="post" action="{{ url_for('sync', what='assignments') }}" style="display:inline;">
+    <button class="btn" type="submit">Sync assignments</button>
+  </form>
+  <form method="post" action="{{ url_for('sync', what='roster') }}" style="display:inline;">
+    <button class="btn secondary" type="submit">Sync roster</button>
+  </form>
+  <form method="post" action="{{ url_for('sync', what='scores') }}" style="display:inline;">
+    <button class="btn secondary" type="submit">Sync scores (for included assignments)</button>
+  </form>
+  {% if log %}
+  <p class="muted" style="margin-top:10px;">
+    {% for l in log %}{{ l.ran_at }} &mdash; {{ l.summary }}<br>{% endfor %}
+  </p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h1>Import Attendance Report (Roll Call)</h1>
+  <p class="muted">
+    Roll Call Attendance only syncs as one aggregate column from Canvas.
+    For individual dated attendance columns, export a CSV from Canvas
+    (Settings &rarr; Attendance Reports) and upload it here.
+  </p>
+  <form method="post" action="{{ url_for('import_attendance_report') }}" enctype="multipart/form-data">
+    <input type="file" name="attendance_csv" accept=".csv" required>
+    <select name="term" required>
+      <option value="" selected disabled>Term for these dates&hellip;</option>
+      <option value="midterm">Midterm</option>
+      <option value="finals">Finals</option>
+    </select>
+    <button class="btn" type="submit">Import</button>
+  </form>
+</div>
+
+<div class="card">
+  <h1>2. Mapping status</h1>
+  <table>
+    <tr><th>Term</th>{% for cat, label in category_labels.items() %}<th>{{ label }}</th>{% endfor %}</tr>
+    {% for term in ['midterm', 'finals'] %}
+    <tr>
+      <td><strong>{{ term|capitalize }}</strong></td>
+      {% for cat in category_labels %}
+        <td>{{ summary.get(term, {}).get(cat, 0) }} assignment(s)</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </table>
+  <p class="muted">Midterm formula uses Activity/Quiz/Exam. Finals formula uses Activity/Quiz/PT/Exam. Attendance is tracked but not graded.</p>
+</div>
+
+<div class="card">
+  <h1>3. Assign each Canvas item to a term + category</h1>
+  {% if not has_assignments %}
+    <p class="muted">No assignments yet -- click "Sync assignments" above first.</p>
+  {% else %}
+  <form method="post" action="{{ url_for('mapping_save') }}">
+    {% for group_name, items in groups.items() %}
+      <div class="group-title">{{ group_name }}</div>
+      <table>
+        <tr><th>Assignment</th><th>Points</th><th>Due</th><th>Term</th><th>Category</th><th>Include</th></tr>
+        {% for a in items %}
+        <tr>
+          <td>{{ a.name }}</td>
+          <td>{{ a.points_possible if a.points_possible is not none else '—' }}</td>
+          <td>{{ (a.due_at or '')[:10] or '—' }}</td>
+          <td>
+            <select name="term_{{ a.id }}">
+              <option value="" {{ 'selected' if not a.term }}>—</option>
+              <option value="midterm" {{ 'selected' if a.term == 'midterm' }}>Midterm</option>
+              <option value="finals" {{ 'selected' if a.term == 'finals' }}>Finals</option>
+            </select>
+          </td>
+          <td>
+            <select name="category_{{ a.id }}">
+              <option value="" {{ 'selected' if not a.category }}>—</option>
+              {% for cat, label in category_labels.items() %}
+              <option value="{{ cat }}" {{ 'selected' if a.category == cat }}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td style="text-align:center;">
+            <input type="checkbox" name="included_{{ a.id }}" {{ 'checked' if a.included }}>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% endfor %}
+    <p><button class="btn" type="submit">Save mapping</button></p>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h1>4. View results</h1>
+  <a class="btn" href="{{ url_for('gradebook') }}">Go to gradebook</a>
+</div>
+
+{% endblock %}

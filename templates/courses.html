@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Choose Course{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Choose your course</h1>
+  {% if not courses %}
+    <p class="muted">No active courses found for this token, or the connection failed -- check Canvas Setup.</p>
+  {% else %}
+  <table>
+    <tr><th>Course</th><th>Code</th><th>ID</th><th></th></tr>
+    {% for c in courses %}
+    <tr>
+      <td>{{ c.name }}</td>
+      <td>{{ c.course_code }}</td>
+      <td>{{ c.id }}</td>
+      <td>
+        <form method="post" style="margin:0;">
+          <input type="hidden" name="course_id" value="{{ c.id }}">
+          <input type="hidden" name="course_name" value="{{ c.name }}">
+          <button class="btn" type="submit">Select</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

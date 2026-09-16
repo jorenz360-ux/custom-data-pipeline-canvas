@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Import from Excel{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Import mapping from an existing Excel gradebook</h1>
+  <p class="muted">
+    Upload any course's gradebook workbook (doesn't have to be this exact
+    template -- works best on sheets with a "STUDENTS" header and section
+    headers like ATTENDANCE / Activities / Quiz / Performance Task / Exam).
+    The app will scan its structure, guess which columns are raw score
+    inputs, and try to match each one to an already-synced Canvas
+    assignment. You review and confirm everything before anything is saved
+    -- <strong>make sure you've run "Sync assignments" on the Mapping page
+    first</strong>, so there's something to match against.
+  </p>
+  <form method="post" enctype="multipart/form-data">
+    <p><input type="file" name="excel_file" accept=".xlsx" required></p>
+    <button class="btn" type="submit">Parse file</button>
+  </form>
+</div>
+{% endblock %}

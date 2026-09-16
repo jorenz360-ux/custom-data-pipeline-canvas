@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Canvas Setup{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Connect to Canvas</h1>
+  <p class="muted">
+    Get your token from Canvas: Account &rarr; Settings &rarr; + New Access Token.
+    This is stored only in the local <code>gradebook.db</code> file on this machine.
+  </p>
+  <form method="post">
+    <p>
+      <label>Canvas base URL<br>
+        <input type="text" name="base_url" value="{{ base_url }}" placeholder="https://holynameuniversity.instructure.com" size="50" required>
+      </label>
+    </p>
+    <p>
+      <label>API token<br>
+        <input type="password" name="token" value="{{ token }}" size="50" required>
+      </label>
+    </p>
+    <button class="btn" type="submit">Save &amp; test connection</button>
+  </form>
+</div>
+{% endblock %}

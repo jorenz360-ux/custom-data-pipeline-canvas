@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Gradebook{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Gradebook</h1>
+  <p><a class="btn" href="{{ url_for('export_csv') }}">Export CSV</a>
+     <a class="btn" href="{{ url_for('export_xlsx') }}">Export Excel</a>
+     <a class="btn secondary" href="{{ url_for('mapping') }}">Edit mapping</a></p>
+
+  {% if not rows %}
+    <p class="muted">No students yet -- sync your roster on the Mapping page.</p>
+  {% else %}
+  <div style="overflow-x:auto;">
+  <table>
+    <tr>
+      <th rowspan="3">Student</th>
+      <th colspan="{{ midterm_colspan }}">Midterm</th>
+      <th rowspan="3">Midterm Grade</th>
+      <th rowspan="3">Status</th>
+      <th colspan="{{ finals_colspan }}">Finals</th>
+      <th rowspan="3">Finals Grade</th>
+      <th rowspan="3">Course Grade</th>
+      <th rowspan="3">Attendance (Mid / Fin)</th>
+    </tr>
+    <tr>
+      {% if column_headers.midterm.attendance %}<th colspan="{{ column_headers.midterm.attendance|length }}">Attendance</th>{% endif %}
+      {% for cat in midterm_categories %}<th colspan="{{ column_headers.midterm[cat]|length + 1 }}">{{ category_labels[cat] }}</th>{% endfor %}
+      {% if column_headers.finals.attendance %}<th colspan="{{ column_headers.finals.attendance|length }}">Attendance</th>{% endif %}
+      {% for cat in finals_categories %}<th colspan="{{ column_headers.finals[cat]|length + 1 }}">{{ category_labels[cat] }}</th>{% endfor %}
+    </tr>
+    <tr>
+      {% for name in column_headers.midterm.attendance %}<th>{{ name }}</th>{% endfor %}
+      {% for cat in midterm_categories %}
+        {% for name in column_headers.midterm[cat] %}<th>{{ name }}</th>{% endfor %}
+        <th>Grade</th>
+      {% endfor %}
+      {% for name in column_headers.finals.attendance %}<th>{{ name }}</th>{% endfor %}
+      {% for cat in finals_categories %}
+        {% for name in column_headers.finals[cat] %}<th>{{ name }}</th>{% endfor %}
+        <th>Grade</th>
+      {% endfor %}
+    </tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.name }}</td>
+      {% for session in r.attendance.midterm.sessions %}<td class="{{ 'att-present' if session.mark else 'att-absent' }}">{{ session.mark }}</td>{% endfor %}
+      {% for cat in midterm_categories %}
+        {% for item in r.categories.midterm[cat].scores %}<td>{{ item.display }}</td>{% endfor %}
+        <td>{{ r.categories.midterm[cat].grade if r.categories.midterm[cat].grade is not none else '—' }}</td>
+      {% endfor %}
+      <td>{{ r.midterm_grade if r.midterm_grade is not none else '—' }}</td>
+      <td>
+        {% if r.midterm_status == 'PASS' %}<span class="pill pass">PASS</span>
+        {% elif r.midterm_status == 'FAIL' %}<span class="pill fail">FAIL</span>
+        {% else %}<span class="pill incomplete">incomplete</span>{% endif %}
+      </td>
+      {% for session in r.attendance.finals.sessions %}<td class="{{ 'att-present' if session.mark else 'att-absent' }}">{{ session.mark }}</td>{% endfor %}
+      {% for cat in finals_categories %}
+        {% for item in r.categories.finals[cat].scores %}<td>{{ item.display }}</td>{% endfor %}
+        <td>{{ r.categories.finals[cat].grade if r.categories.finals[cat].grade is not none else '—' }}</td>
+      {% endfor %}
+      <td>{{ r.finals_grade if r.finals_grade is not none else '—' }}</td>
+      <td><strong>{{ r.course_grade if r.course_grade is not none else '—' }}</strong></td>
+      <td>{{ r.attendance.midterm.present }}/{{ r.attendance.midterm.total }} &middot; {{ r.attendance.finals.present }}/{{ r.attendance.finals.total }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

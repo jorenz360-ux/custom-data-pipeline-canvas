@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Review Import{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Review detected slots</h1>
+  <p class="muted">
+    Everything below is a suggestion, not yet saved. Fix any wrong Term /
+    Category, pick a different Canvas assignment where the guess is wrong,
+    or leave "&mdash; skip &mdash;" to not map that slot at all. Nothing
+    changes until you click Apply at the bottom.
+  </p>
+  <form method="post" action="{{ url_for('import_apply') }}">
+    <input type="hidden" name="review_token" value="{{ review_token }}">
+    <table>
+      <tr>
+        <th>Sheet</th><th>Detected label</th><th>Term</th><th>Category</th><th>Match to Canvas assignment</th>
+      </tr>
+      {% for p in proposals %}
+      <tr>
+        <td>{{ p.sheet }}</td>
+        <td>{{ p.label }}</td>
+        <td>
+          <select name="term_{{ p.slot_key }}">
+            <option value="" {{ 'selected' if not p.term }}>&mdash;</option>
+            <option value="midterm" {{ 'selected' if p.term == 'midterm' }}>Midterm</option>
+            <option value="finals" {{ 'selected' if p.term == 'finals' }}>Finals</option>
+          </select>
+        </td>
+        <td>
+          <select name="category_{{ p.slot_key }}">
+            {% for cat, label in category_labels.items() %}
+            <option value="{{ cat }}" {{ 'selected' if p.category == cat }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td>
+          <select name="assignment_{{ p.slot_key }}">
+            <option value="">&mdash; skip &mdash;</option>
+            {% for c in p.candidates %}
+            <option value="{{ c.id }}" {{ 'selected' if c.id == p.suggested_assignment_id }}>{{ c.label }}</option>
+            {% endfor %}
+          </select>
+          {% if not p.suggested_assignment_id %}
+            <span class="pill incomplete">no confident match</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    <p><button class="btn" type="submit">Apply mapping</button></p>
+  </form>
+</div>
+{% endblock %}
